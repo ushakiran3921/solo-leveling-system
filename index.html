@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>System App - Usha Kiran</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:ital,wght@0,700;0,900;1,800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-abyss: #07040E; --card-bg: rgba(12, 8, 25, 0.85); --stroke: rgba(138, 43, 226, 0.3);
+      --cyan: #00E5FF; --purple: #8A2BE2; --blue: #007BFF; --green: #00FFA3; --red: #FF2A55; --text: #FFF; --muted: #9BA4B5;
+      --rank-e: #888; --rank-d: #CD7F32; --rank-c: #C0C0C0; --rank-b: #FFD700; --rank-a: #00E5FF; --rank-s: #FF2A55;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    body { background: url('bg.jpg') center/cover fixed; background-color: var(--bg-abyss); background-blend-mode: overlay; color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    
+    /* SYSTEM BOOT SCREEN */
+    #boot-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10000; }
+    .boot-btn { background: rgba(138,43,226,0.1); border: 2px solid var(--purple); color: var(--cyan); font-family: 'Montserrat'; font-size: 20px; font-weight: 900; padding: 15px 40px; text-transform: uppercase; cursor: pointer; box-shadow: 0 0 20px rgba(138,43,226,0.5); border-radius: 8px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 10px rgba(138,43,226,0.4); } 50% { box-shadow: 0 0 30px rgba(0,229,255,0.8); } 100% { box-shadow: 0 0 10px rgba(138,43,226,0.4); } }
+
+    /* MODALS */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: none; justify-content: center; align-items: center; }
+    .modal-box { background: #0A0815; border: 2px solid var(--cyan); box-shadow: 0 0 30px rgba(138,43,226,0.6); padding: 30px; border-radius: 12px; text-align: center; max-width: 320px; width: 100%; }
+    .modal-title { font-family: 'Montserrat'; font-style: italic; font-size: 24px; color: var(--cyan); margin-bottom: 10px; }
+    .modal-btn { background: var(--cyan); color: #000; border: none; padding: 12px 20px; font-weight: 800; text-transform: uppercase; border-radius: 6px; cursor: pointer; margin-top: 20px; width: 100%; }
+
+    /* APP CORE */
+    #app-core { padding: 20px 15px 90px 15px; max-width: 500px; margin: 0 auto; display: none; }
+    .hero-header { border-bottom: 1px solid var(--stroke); padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .hero-header h1 { font-family: 'Montserrat'; font-style: italic; font-weight: 900; font-size: 26px; text-shadow: 0 0 15px var(--purple); color: var(--cyan); text-transform: uppercase; }
+    .hero-header p { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: 1px; }
+
+    /* CARDS */
+    .card { background: var(--card-bg); border: 1px solid var(--stroke); border-radius: 16px; padding: 20px; margin-bottom: 20px; backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+    .card-title { display: flex; justify-content: space-between; font-family: 'Montserrat'; font-weight: 800; font-size: 14px; margin-bottom: 15px; color: var(--cyan); text-transform: uppercase; }
+    
+    .progress-bg { background: rgba(0,0,0,0.6); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 15px; border: 1px solid rgba(138,43,226,0.3); }
+    .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--purple), var(--cyan)); transition: width 0.4s ease; box-shadow: 0 0 10px var(--cyan); }
+    
+    .subtask { display: flex; align-items: flex-start; margin-bottom: 12px; font-size: 14px; cursor: pointer; }
+    .check-box { width: 20px; height: 20px; border: 2px solid var(--cyan); border-radius: 4px; margin-right: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; background: rgba(0,0,0,0.5); }
+    .subtask.done .check-box { background: var(--green); border-color: var(--green); color: #000; font-weight: bold; }
+    .subtask.done .text { text-decoration: line-through; color: var(--muted); }
+    
+    .task-actions { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+    .btn { flex: 1; padding: 10px; border-radius: 6px; font-weight: 700; text-transform: uppercase; font-size: 12px; text-align: center; cursor: pointer; border: 1px solid transparent; background: transparent; transition: 0.3s; }
+    .btn-giveup { border-color: var(--red); color: var(--red); }
+    .btn-giveup:hover { background: rgba(255,42,85,0.1); }
+    .btn-done { border-color: var(--cyan); color: var(--cyan); }
+    .btn-done:hover { background: rgba(0,229,255,0.1); }
+    .btn-done.locked { border-color: #444; color: #444; cursor: not-allowed; }
+
+    .timer-display { font-family: 'Montserrat'; font-size: 32px; color: var(--green); text-align: center; margin: 10px 0; text-shadow: 0 0 10px var(--green); }
+
+    /* CALENDAR MODULE (UPGRADED) */
+    select.cal-dropdown { width: 100%; background: #000; color: var(--cyan); border: 1px solid var(--purple); padding: 10px; font-family: 'Montserrat'; font-weight: 700; border-radius: 6px; outline: none; margin-bottom: 15px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 5px; }
+    .cal-header { font-size: 10px; color: var(--muted); text-align: center; font-weight: bold; }
+    .cal-day { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--stroke); display: flex; justify-content: center; align-items: center; font-size: 12px; margin: 0 auto; color: var(--muted); transition: 0.3s; }
+    .cal-day.green { border-color: var(--green); background: rgba(0,255,163,0.15); color: var(--green); box-shadow: 0 0 10px rgba(0,255,163,0.4); font-weight: bold; }
+    .cal-day.half { border-color: var(--cyan); background: rgba(0,229,255,0.15); color: var(--cyan); font-weight: bold; }
+    .cal-day.red { border-color: var(--red); background: rgba(255,42,85,0.15); color: var(--red); font-weight: bold; box-shadow: 0 0 10px rgba(255,42,85,0.4); }
+
+    /* REPORTS & CHARTS */
+    .report-stat-box { background: rgba(0,0,0,0.4); border: 1px solid var(--stroke); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
+    .report-stat-box h3 { font-family: 'Montserrat'; font-size: 24px; color: var(--cyan); margin-bottom: 2px; }
+    .report-stat-box p { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: bold; }
+    
+    .rank-display { text-align: center; padding: 20px 0; }
+    .rank-tier { font-family: 'Montserrat'; font-size: 48px; font-style: italic; font-weight: 900; text-shadow: 0 0 20px currentColor; margin-bottom: 5px; }
+    .rank-points { font-size: 14px; font-weight: bold; color: var(--text); }
+    
+    .tier-list-item { display: flex; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid var(--stroke); font-family: 'Inter'; }
+    .tier-list-item:last-child { border-bottom: none; }
+
+    /* GRAPH CSS */
+    .chart-container { display: flex; align-items: flex-end; justify-content: space-between; height: 140px; padding: 10px 0; margin-top: 10px; border-bottom: 1px solid var(--stroke); }
+    .chart-bar-wrapper { width: 20%; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+    .chart-bar { width: 100%; background: linear-gradient(0deg, var(--purple), var(--cyan)); border-radius: 4px 4px 0 0; position: relative; transition: height 1s ease; box-shadow: 0 0 10px rgba(0,229,255,0.2); }
+    .chart-bar.green { background: linear-gradient(0deg, #004d00, var(--green)); box-shadow: 0 0 10px rgba(0,255,163,0.3); }
+    .chart-bar.red { background: linear-gradient(0deg, #800000, var(--red)); box-shadow: 0 0 10px rgba(255,42,85,0.3); }
+    .chart-bar span { position: absolute; top: -20px; font-size: 10px; color: var(--text); font-weight: bold; width: 100%; text-align: center; }
+    .chart-labels { display: flex; justify-content: space-between; padding-top: 10px; }
+    .chart-label { width: 20%; text-align: center; font-size: 9px; color: var(--muted); font-weight: 800; }
+
+    /* BOTTOM NAV */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; background: rgba(5,4,14,0.98); border-top: 1px solid var(--purple); display: flex; justify-content: space-around; align-items: center; z-index: 100; box-shadow: 0 -5px 20px rgba(138,43,226,0.2); }
+    .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--muted); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: 0.2s; }
+    .nav-item.active { color: var(--cyan); text-shadow: 0 0 8px var(--cyan); }
+    .nav-icon { font-size: 22px; margin-bottom: 4px; }
+    
+    .tab-content { display: none; animation: slideUp 0.3s ease; }
+    .tab-content.active { display: block; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    input[type="text"] { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--stroke); color: var(--text); padding: 12px; border-radius: 6px; margin-bottom: 10px; outline: none; }
+    input[type="text"]:focus { border-color: var(--cyan); }
+  </style>
+</head>
+<body>
+
+  <!-- Audio -->
+  <audio id="bgm" loop><source src="bgm.mp3" type="audio/mpeg"></audio>
+  <audio id="sfx"><source src="sfx.mp3" type="audio/mpeg"></audio>
+
+  <!-- BOOT SCREEN -->
+  <div id="boot-screen">
+    <button class="boot-btn" onclick="initializeSystem()">System Link Start</button>
+  </div>
+
+  <!-- NOTIFICATION MODAL -->
+  <div class="modal-overlay" id="notify-modal">
+    <div class="modal-box">
+      <div class="modal-title" id="notify-title">QUEST CLEARED</div>
+      <p style="color: var(--muted); font-size: 13px;" id="notify-desc">Data synchronized.</p>
+      <button class="modal-btn" onclick="document.getElementById('notify-modal').style.display='none'">CONFIRM</button>
+    </div>
+  </div>
+
+  <div id="app-core">
+    <div class="hero-header">
+      <div>
+        <h1>USHA KIRAN</h1>
+        <p>BHM TRACK • <span id="top-rank">E-RANK</span></p>
+      </div>
+      <div style="text-align: right;">
+        <h1 style="color: var(--green); font-size: 20px;" id="top-xp">0 XP</h1>
+        <p id="top-streak">0 DAY STREAK</p>
+      </div>
+    </div>
+
+    <!-- TAB 1: QUESTS -->
+    <div id="tab-quests" class="tab-content active"><div id="quests-container"></div></div>
+
+    <!-- TAB 2: ATTENDANCE -->
+    <div id="tab-attendance" class="tab-content">
+      <div class="card">
+        <div class="card-title"><span>COLLEGE SESSION</span><span>09:30 - 16:00</span></div>
+        <div class="progress-bg"><div class="progress-fill" id="att-bar"></div></div>
+        <p id="att-status" style="font-size: 12px; color: var(--muted); margin-bottom: 15px; text-align: center;">Standby</p>
+        <div class="task-actions" id="att-action-box" style="flex-wrap: wrap;">
+          <button class="btn btn-done" id="att-done-btn" style="flex: 1 1 100%; margin-bottom: 5px;" onclick="markAttendance('full')">FULL DAY DONE</button>
+          <button class="btn btn-giveup" style="flex: 1; color: var(--cyan); border-color: var(--cyan);" onclick="markAttendance('half')">HALF DAY</button>
+          <button class="btn btn-giveup" style="flex: 1;" onclick="markAttendance('absent')">ABSENT</button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <select class="cal-dropdown" id="cal-month-select" onchange="renderCalendar()"></select>
+        <div class="cal-grid">
+          <div class="cal-header">S</div><div class="cal-header">M</div><div class="cal-header">T</div><div class="cal-header">W</div><div class="cal-header">T</div><div class="cal-header">F</div><div class="cal-header">S</div>
+        </div>
+        <div class="cal-grid" id="cal-container" style="margin-bottom: 20px;"></div>
+        
+        <div style="border-top: 1px solid var(--stroke); padding-top: 15px;">
+          <div class="card-title" style="color: #FFF; font-size: 12px;">MONTHLY REPORT</div>
+          <div style="display: flex; justify-content: space-between;">
+            <div class="report-stat-box" style="flex: 1; margin-right: 5px;">
+              <h3 id="rep-full">0</h3><p>Present</p>
+            </div>
+            <div class="report-stat-box" style="flex: 1; margin: 0 5px;">
+              <h3 id="rep-half" style="color: var(--cyan);">0</h3><p>Half Day</p>
+            </div>
+            <div class="report-stat-box" style="flex: 1; margin-left: 5px;">
+              <h3 id="rep-absent" style="color: var(--red);">0</h3><p>Absent</p>
+            </div>
+          </div>
+          
+          <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; font-weight:bold;">
+            <span style="color:var(--muted)">Monthly Rate</span><span id="rep-graph-txt" style="color:var(--green)">0%</span>
+          </div>
+          <div class="progress-bg" style="height: 6px; margin-bottom: 25px;"><div class="progress-fill" id="rep-graph" style="background: var(--green);"></div></div>
+
+          <div class="card-title" style="color: #FFF; font-size: 12px;">OVERALL ATTENDANCE</div>
+          <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:6px; font-weight:bold;">
+            <span style="color:var(--muted)">Total Global Rate</span><span id="overall-graph-txt" style="color:var(--cyan)">0%</span>
+          </div>
+          <div class="progress-bg" style="height: 6px;"><div class="progress-fill" id="overall-graph" style="background: var(--cyan);"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: MONTHLY TASKS -->
+    <div id="tab-monthly" class="tab-content">
+      <div class="card">
+        <div class="card-title"><span>ADD MONTHLY TASK</span></div>
+        <input type="text" id="new-task-title" placeholder="Task Title...">
+        <input type="text" id="new-task-sub" placeholder="Sub Task Detail...">
+        <button class="btn btn-done" style="width: 100%; border-color: var(--green); color: var(--green);" onclick="addMonthlyTask()">CREATE TASK</button>
+      </div>
+      
+      <div class="card">
+        <div class="card-title"><span>COMPLETED THIS MONTH</span><span id="monthly-count">0</span></div>
+        <div id="monthly-completed-list" style="font-size: 12px; color: var(--green);"></div>
+      </div>
+      <div id="monthly-list"></div>
+    </div>
+
+    <!-- TAB 4: REPORTS & GRAPHS -->
+    <div id="tab-reports" class="tab-content">
+      
+      <!-- NEW PERFORMANCE METRICS GRAPH -->
+      <div class="card">
+        <div class="card-title"><span>PERFORMANCE METRICS</span></div>
+        <div class="chart-container">
+          <div class="chart-bar-wrapper">
+            <div class="chart-bar" id="bar-tasks" style="height: 5%;"> <span id="bar-tasks-val">0</span> </div>
+          </div>
+          <div class="chart-bar-wrapper">
+            <div class="chart-bar red" id="bar-workouts" style="height: 5%;"> <span id="bar-workouts-val">0</span> </div>
+          </div>
+          <div class="chart-bar-wrapper">
+            <div class="chart-bar green" id="bar-attend" style="height: 5%;"> <span id="bar-attend-val">0</span> </div>
+          </div>
+          <div class="chart-bar-wrapper">
+            <div class="chart-bar" id="bar-monthly" style="height: 5%; background: linear-gradient(0deg, #b8860b, #FFD700); box-shadow: 0 0 10px rgba(255,215,0,0.3);"> <span id="bar-monthly-val">0</span> </div>
+          </div>
+        </div>
+        <div class="chart-labels">
+          <div class="chart-label">QUESTS</div>
+          <div class="chart-label">WORKOUTS</div>
+          <div class="chart-label">CLASSES</div>
+          <div class="chart-label">MONTHLY</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>BR RANKED PROGRESSION</span></div>
+        <div class="rank-display">
+          <div class="rank-tier" id="rank-name" style="color: var(--rank-e);">E-RANK</div>
+          <div class="rank-points" id="rank-pts">0 / 1000 XP</div>
+        </div>
+        <div class="progress-bg" style="height: 12px;"><div class="progress-fill" id="rank-bar"></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>TIER REWARDS</span></div>
+        <div id="tier-list-container"></div>
+      </div>
+    </div>
+
+    <!-- TAB 5: SETTINGS -->
+    <div id="tab-settings" class="tab-content">
+      <div class="card">
+        <div class="card-title"><span>SYSTEM SETTINGS</span></div>
+        <div class="subtask done" onclick="toggleSetting('bgm', this)"><div class="check-box">✔</div> <div class="text" style="color:#FFF; text-decoration:none;">Background Music (BGM)</div></div>
+        <div class="subtask done" onclick="toggleSetting('sfx', this)"><div class="check-box">✔</div> <div class="text" style="color:#FFF; text-decoration:none;">Notification Sound Effects</div></div>
+        
+        <div class="subtask" onclick="resetSystemData()" style="border: 1px solid var(--red); background: rgba(255,42,85,0.1); padding: 12px; border-radius: 8px; margin-top: 30px; align-items: center; justify-content: center;">
+          <div class="text" style="color: var(--red); font-weight: 800; text-transform: uppercase;">⚠ Factory Reset Data</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('quests', this)"><div class="nav-icon">⚔</div>Quests</div>
+    <div class="nav-item" onclick="switchTab('attendance', this)"><div class="nav-icon">🎓</div>Attend</div>
+    <div class="nav-item" onclick="switchTab('monthly', this)"><div class="nav-icon">📅</div>Monthly</div>
+    <div class="nav-item" onclick="switchTab('reports', this)"><div class="nav-icon">📊</div>Reports</div>
+    <div class="nav-item" onclick="switchTab('settings', this)"><div class="nav-icon">⚙</div>Settings</div>
+  </div>
+
+  <script>
+    // --- GOOGLE SHEETS CLOUD API ---
+    const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycby7hcA5hwI0eNiAQvgPx8iuNuMueNllAmaxSO27xZK6xWa4AhlB3CvitaVMS-wsiUfN/exec";
+
+    function syncToGoogleSheets(actionType, details, xpGained) {
+      const payload = { actionType: actionType, details: typeof details === 'string' ? details : JSON.stringify(details), xp: xpGained };
+      fetch(GOOGLE_API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+      .then(() => console.log("System Sync Dispatched:", actionType))
+      .catch(e => console.error("Sync Error:", e));
+    }
+
+    const questsData = [
+      { id: 1, time: "05:00 AM", title: "Hydration & Fuel", timer: 17*60, subs: ["Mix Lemon, Ginger, 1 spoon Honey", "Eat soaked Almonds & Raisins"] },
+      { id: 2, time: "05:30 AM", title: "Morning Activation", subs: ["30 Pushups", "30 Sit-ups", "30 Squats"], isWorkout: true },
+      { id: 3, time: "05:45 AM", title: "Morning Face Care", subs: ["Wash face (Derma Co 1% Salicylic)", "Aqualogica Sunscreen", "Himalaya Lip Balm"] },
+      { id: 4, time: "06:00 AM", title: "Culinary Mastery", subs: ["60 mins Food Production", "Memorize 5 knife cuts", "Memorize 1 mother sauce"] },
+      { id: 5, time: "07:00 AM", title: "Protein & Prep", subs: ["PG Breakfast + 3 Eggs", "Mix Cashews, Peanuts, Dates"] },
+      { id: 6, time: "08:00 AM", title: "Campus Focus", subs: ["Focus on F&B, Front Office, Housekeeping"] },
+      { id: 7, time: "01:00 PM", title: "Heavy Lunch", subs: ["PG Lunch (Heavy Rice for Carbs)"] },
+      { id: 8, time: "05:00 PM", title: "Return & Pre-Workout", subs: ["Eat Grapes/Pomegranate", "1 Banana", "Roasted Chana"] },
+      { id: 9, time: "05:30 PM", title: "Evening Hypertrophy (5kg)", subs: ["Dumbbell Squats (Slow)", "Bicep Curls", "Overhead Tricep Extensions", "Lateral Raises"], isWorkout: true },
+      { id: 10, time: "06:15 PM", title: "Night Face Care", subs: ["Wash face (Derma Co 1%)", "Pond's Super Light Gel", "Himalaya Lip Balm"] },
+      { id: 11, time: "06:30 PM", title: "Post-Workout Recovery", subs: ["3 spoons Amma's Seed Powder", "1 Banana", "Raw Carrot & Cucumber"] },
+      { id: 12, time: "07:00 PM", title: "Languages", subs: ["English articles aloud (20m)", "French vocab (20m)", "Italian homework (20m)"] },
+      { id: 13, time: "08:30 PM", title: "PG Dinner & Inventory", subs: ["PG Dinner", "Soak tomorrow's Almonds/Raisins"] },
+      { id: 14, time: "10:00 PM", title: "Sleep", type: "sleep", subs: ["8 hours strictly for recovery"] }
+    ];
+
+    const ranks = [
+      { n: 'E-RANK', min: 0, max: 1000, c: 'var(--rank-e)' }, { n: 'D-RANK', min: 1000, max: 3000, c: 'var(--rank-d)' },
+      { n: 'C-RANK', min: 3000, max: 6000, c: 'var(--rank-c)' }, { n: 'B-RANK', min: 6000, max: 10000, c: 'var(--rank-b)' },
+      { n: 'A-RANK', min: 10000, max: 15000, c: 'var(--rank-a)' }, { n: 'S-RANK', min: 15000, max: 999999, c: 'var(--rank-s)' }
+    ];
+
+    let playerXP = parseInt(localStorage.getItem("xp") || "0");
+    let completedTasksCount = parseInt(localStorage.getItem("tasksDone") || "0");
+    let workoutCount = parseInt(localStorage.getItem("workoutsDone") || "0");
+    let totalClasses = parseInt(localStorage.getItem("classesDone") || "0");
+    let monthlyCompletedCount = parseInt(localStorage.getItem("monthlyDone") || "0");
+    
+    let eggTimerInterval = null; let sfxEnabled = true; let bgmEnabled = true;
+
+    // --- SYSTEM BOOT & AUDIO ---
+    function initializeSystem() {
+      playBgm();
+      document.getElementById('boot-screen').style.display = 'none';
+      document.getElementById('app-core').style.display = 'block';
+      
+      const storedDay = localStorage.getItem('lastActiveDay');
+      const currentDay = new Date().toDateString();
+      if(storedDay && storedDay !== currentDay) { console.log("New Day - Quests Refreshed"); }
+      localStorage.setItem('lastActiveDay', currentDay);
+
+      initCalendarDropdown();
+      updateStatsUI(); renderQuests(); renderCalendar();
+      setInterval(updateAttendanceTimer, 10000); updateAttendanceTimer();
+    }
+
+    function playBgm() { if(!bgmEnabled) return; const b = document.getElementById("bgm"); b.volume = 0.4; b.play().catch(e => console.log(e)); }
+    function playSfx() {
+      if(!sfxEnabled) return; const s = document.getElementById("sfx"); const b = document.getElementById("bgm");
+      if(bgmEnabled && !b.paused) { b.pause(); s.onended = () => { if(bgmEnabled) b.play().catch(e=>{}); }; } else { s.onended = null; }
+      s.currentTime = 0; s.play().catch(e => console.log(e));
+    }
+
+    function toggleSetting(type, elem) {
+      elem.classList.toggle("done"); const box = elem.querySelector('.check-box');
+      const isEnabled = elem.classList.contains("done"); box.innerText = isEnabled ? "✔" : "";
+      if(type === 'bgm') { bgmEnabled = isEnabled; const b = document.getElementById("bgm"); if(bgmEnabled) b.play(); else b.pause(); } 
+      else { sfxEnabled = isEnabled; }
+    }
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      el.classList.add('active');
+      if(tabId === 'reports') updateChartBars();
+    }
+
+    // --- QUESTS LOGIC ---
+    function renderQuests() {
+      const container = document.getElementById("quests-container");
+      container.innerHTML = "";
+      questsData.forEach((q) => {
+        let subsHTML = q.subs.map((s) => `<div class="subtask" onclick="toggleSubtask(this, ${q.id}, ${q.subs.length})"><div class="check-box"></div><div class="text">${s}</div></div>`).join("");
+        let extraUI = "";
+        
+        if (q.timer) { extraUI = `<div class="timer-display" id="timer-display-1">17:00</div><div style="display:flex; gap:10px; margin-bottom:15px;"><button class="btn btn-done" onclick="startEggTimer(${q.timer})">START TIMER</button><button class="btn btn-giveup" style="color:var(--muted); border-color:var(--muted);" onclick="stopEggTimer()">DONE/RESET</button></div>`; }
+        if (q.type === "sleep") { extraUI = `<div class="progress-bg"><div class="progress-fill" id="sleep-bar" style="width:0%;"></div></div><div style="display:flex; gap:10px; margin-bottom:15px;"><button class="btn btn-done" onclick="startSleep()">SLEEP (10 PM)</button><button class="btn btn-done" onclick="wakeUp()">WAKE (5 AM)</button></div>`; }
+        
+        container.innerHTML += `
+          <div class="card" id="quest-card-${q.id}">
+            <div class="card-title"><span>TASK ${q.id}: ${q.title}</span><span>${q.time}</span></div>
+            ${q.type !== 'sleep' ? `<div class="progress-bg"><div class="progress-fill" id="prog-${q.id}"></div></div>` : ''}
+            ${extraUI}
+            ${subsHTML}
+            <div class="task-actions" id="action-box-${q.id}">
+              <button class="btn btn-giveup" onclick="giveUpTask(${q.id})">GIVE UP</button>
+              <button class="btn btn-done" onclick="submitQuest(${q.id}, '${q.title}', ${q.isWorkout ? 'true' : 'false'})">DONE</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function toggleSubtask(elem, questId, totalSubs) {
+      const card = elem.closest('.card');
+      if (card.classList.contains('locked')) return;
+      elem.classList.toggle("done");
+      elem.querySelector('.check-box').innerHTML = elem.classList.contains("done") ? "✔" : "";
+      const doneCount = card.querySelectorAll(".subtask.done").length;
+      const pct = (doneCount / totalSubs) * 100;
+      const bar = document.getElementById(`prog-${questId}`);
+      if(bar) bar.style.width = pct + "%";
+    }
+
+    function submitQuest(id, title, isWorkout) {
+      const card = document.getElementById(`quest-card-${id}`);
+      if (card.classList.contains('locked')) return;
+      card.classList.add('locked');
+      
+      let completedSubs = [];
+      card.querySelectorAll('.subtask.done .text').forEach(el => completedSubs.push(el.innerText));
+      
+      document.getElementById(`action-box-${id}`).innerHTML = `<div style="color:var(--green); font-weight:900; text-align:center; width:100%; padding:10px; text-transform:uppercase; letter-spacing:2px; border: 1px solid var(--green); border-radius:6px; background: rgba(0,255,163,0.1);">QUEST COMPLETED ✔</div>`;
+
+      playSfx(); playerXP += 50; completedTasksCount++;
+      if(isWorkout) workoutCount++;
+      saveStats(); updateStatsUI();
+      
+      // SYNC TO GOOGLE SHEETS
+      syncToGoogleSheets("Daily Quest", { title: title, checkedSubtasks: completedSubs }, 50);
+
+      document.getElementById("notify-title").innerText = "QUEST CLEARED";
+      document.getElementById("notify-desc").innerText = `Saved specific ticks. +50 XP acquired.\nData synced to Google Sheets.`;
+      document.getElementById("notify-modal").style.display = "flex";
+    }
+
+    function giveUpTask(id) {
+      const card = document.getElementById(`quest-card-${id}`);
+      if (card.classList.contains('locked')) return;
+      card.classList.add("locked"); card.style.opacity = "0.6";
+      document.getElementById(`action-box-${id}`).innerHTML = `<div style="color:var(--red); font-weight:bold; text-align:center; width:100%; padding:10px;">QUEST ABORTED</div>`;
+    }
+
+    function startEggTimer(seconds) {
+      clearInterval(eggTimerInterval); let rem = seconds; const disp = document.getElementById("timer-display-1");
+      eggTimerInterval = setInterval(() => {
+        const m = Math.floor(rem / 60); const s = rem % 60;
+        disp.innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        if (rem <= 0) { clearInterval(eggTimerInterval); disp.innerText = "DONE!"; playSfx(); }
+        rem--;
+      }, 1000);
+    }
+    function stopEggTimer() { clearInterval(eggTimerInterval); document.getElementById("timer-display-1").innerText = "17:00"; }
+    function startSleep() { document.getElementById("sleep-bar").style.width = "50%"; }
+    function wakeUp() { document.getElementById("sleep-bar").style.width = "100%"; submitQuest(14, "SLEEP RECOVERY", false); }
+
+    // --- ATTENDANCE & CALENDAR ---
+    function initCalendarDropdown() {
+      const sel = document.getElementById('cal-month-select');
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      for(let y = 2026; y <= 2028; y++) {
+        let start = (y === 2026) ? 9 : 0; let end = (y === 2028) ? 3 : 11; 
+        for(let m = start; m <= end; m++) { sel.innerHTML += `<option value="${y}-${m}">${months[m]} ${y}</option>`; }
+      }
+      const now = new Date(); const currentVal = `${now.getFullYear()}-${now.getMonth()}`;
+      if(sel.querySelector(`option[value="${currentVal}"]`)) { sel.value = currentVal; } else { sel.value = "2026-9"; }
+    }
+
+    function renderCalendar() {
+      const val = document.getElementById('cal-month-select').value.split('-');
+      const year = parseInt(val[0]); const month = parseInt(val[1]);
+      
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      
+      const cal = document.getElementById("cal-container");
+      cal.innerHTML = "";
+      for(let i=0; i<firstDay; i++) cal.innerHTML += `<div></div>`;
+      
+      let fullCount = 0; let halfCount = 0; let absCount = 0;
+      for(let i=1; i<=daysInMonth; i++) {
+        let state = localStorage.getItem(`cal_${year}_${month}_${i}`);
+        let cls = state === 'full' ? 'green' : (state === 'half' ? 'half' : (state === 'absent' ? 'red' : ''));
+        let icon = state === 'full' ? '✔' : (state === 'half' ? '◐' : (state === 'absent' ? 'A' : i));
+        if(state === 'full') fullCount++;
+        if(state === 'half') halfCount++;
+        if(state === 'absent') absCount++;
+        cal.innerHTML += `<div class="cal-day ${cls}">${icon}</div>`;
+      }
+      
+      // Monthly Graph
+      document.getElementById('rep-full').innerText = fullCount;
+      document.getElementById('rep-half').innerText = halfCount;
+      document.getElementById('rep-absent').innerText = absCount;
+      let totalWorkDays = daysInMonth - 8; 
+      let mRate = Math.min(100, Math.round(((fullCount + (halfCount*0.5)) / totalWorkDays) * 100)) || 0;
+      document.getElementById('rep-graph').style.width = mRate + '%';
+      document.getElementById('rep-graph-txt').innerText = mRate + '%';
+
+      // Global Graph
+      let globalFull = 0; let globalHalf = 0; let globalDaysLogged = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        let key = localStorage.key(i);
+        if (key.startsWith('cal_')) {
+          let v = localStorage.getItem(key);
+          if(v === 'full') globalFull++; if(v === 'half') globalHalf++;
+          globalDaysLogged++;
+        }
+      }
+      let overallRate = globalDaysLogged > 0 ? Math.min(100, Math.round(((globalFull + (globalHalf*0.5)) / globalDaysLogged) * 100)) : 0;
+      document.getElementById('overall-graph').style.width = overallRate + '%';
+      document.getElementById('overall-graph-txt').innerText = overallRate + '%';
+    }
+
+    function markAttendance(type) {
+      if(type === 'full' && document.getElementById('att-done-btn').classList.contains('locked')) { alert("Wait until 4:00 PM!"); return; }
+      
+      const now = new Date();
+      const y = now.getFullYear(); const m = now.getMonth(); const d = now.getDate();
+      
+      localStorage.setItem(`cal_${y}_${m}_${d}`, type);
+      if(type === 'full') { totalClasses++; saveStats(); }
+      
+      document.getElementById('cal-month-select').value = `${y}-${m}`;
+      renderCalendar(); updateStatsUI();
+      
+      document.getElementById('att-action-box').innerHTML = `<div style="color:var(--cyan); font-weight:900; text-align:center; width:100%; padding:10px; border: 1px solid var(--cyan); border-radius:6px; background: rgba(0,229,255,0.1);">ATTENDANCE LOGGED ✔</div>`;
+      playSfx();
+      
+      // SYNC TO GOOGLE SHEETS
+      const xpGiven = type === 'full' ? 50 : 0;
+      syncToGoogleSheets("Attendance", type.toUpperCase() + " DAY", xpGiven);
+    }
+
+    function updateAttendanceTimer() {
+      const now = new Date(); const start = new Date(); start.setHours(9, 30, 0, 0); const end = new Date(); end.setHours(16, 0, 0, 0);
+      const bar = document.getElementById("att-bar"); const status = document.getElementById("att-status"); const doneBtn = document.getElementById("att-done-btn");
+      if(!doneBtn) return;
+      if (now < start) { bar.style.width = "0%"; status.innerText = "Classes begin at 9:30 AM"; doneBtn.classList.add('locked'); } 
+      else if (now >= end) { bar.style.width = "100%"; status.innerText = "Classes concluded."; doneBtn.classList.remove('locked'); } 
+      else { bar.style.width = (((now - start)/(end-start))*100)+"%"; status.innerText = "In Session... Locked until 4 PM"; doneBtn.classList.add('locked'); }
+    }
+
+    // --- MONTHLY TASKS ---
+    function addMonthlyTask() {
+      const title = document.getElementById("new-task-title").value;
+      const sub = document.getElementById("new-task-sub").value;
+      if(!title) return;
+      const id = Date.now();
+      document.getElementById("monthly-list").insertAdjacentHTML('afterbegin', `
+        <div class="card" id="mt-${id}">
+          <div class="card-title"><span>${title.toUpperCase()}</span></div>
+          <div class="subtask" onclick="if(!this.closest('.card').classList.contains('locked')){ this.classList.toggle('done'); this.querySelector('.check-box').innerHTML=this.classList.contains('done')?'✔':''; }">
+            <div class="check-box"></div><div class="text">${sub}</div>
+          </div>
+          <div class="task-actions" id="action-box-M_${id}">
+            <button class="btn btn-giveup" onclick="document.getElementById('mt-${id}').style.display='none'">GIVE UP</button>
+            <button class="btn btn-done" onclick="finishMonthly('${id}', '${title}', '${sub}')">DONE</button>
+          </div>
+        </div>
+      `);
+      document.getElementById("new-task-title").value = ""; document.getElementById("new-task-sub").value = "";
+    }
+    
+    function finishMonthly(id, title, subText) {
+      document.getElementById(`mt-${id}`).classList.add('locked');
+      document.getElementById(`action-box-M_${id}`).innerHTML = `<div style="color:var(--green); font-weight:900; text-align:center; width:100%; padding:10px; border: 1px solid var(--green); border-radius:6px;">COMPLETED ✔</div>`;
+      
+      monthlyCompletedCount++; 
+      localStorage.setItem("monthlyDone", monthlyCompletedCount);
+      document.getElementById('monthly-count').innerText = monthlyCompletedCount;
+      
+      // Update UI with both Title and Subtask
+      document.getElementById('monthly-completed-list').innerHTML += `
+        <div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1);">
+          <div style="color:var(--green); font-weight:bold; font-size:14px; margin-bottom:4px;">+ ${title}</div>
+          <div style="color:var(--muted); font-size:12px;">↳ ${subText}</div>
+        </div>
+      `;
+      playSfx();
+      playerXP += 100; // Monthly tasks give 100 XP
+      saveStats(); updateStatsUI();
+      
+      // SYNC TO GOOGLE SHEETS
+      syncToGoogleSheets("Monthly Task", title, 100);
+    }
+
+    // --- RESET SYSTEM DATA ---
+    function resetSystemData() {
+      if(confirm("SYSTEM WARNING: This will permanently delete all XP, Ranks, Tasks, and Attendance history. Do you wish to proceed?")) {
+        localStorage.clear(); location.reload();
+      }
+    }
+
+    // --- RANK & REPORTS ---
+    function updateStatsUI() {
+      document.getElementById("top-xp").innerText = playerXP + " XP";
+      document.getElementById("top-streak").innerText = Math.floor(completedTasksCount / 10) + " DAY STREAK";
+      
+      let currentRank = ranks[0];
+      for(let r of ranks) { if(playerXP >= r.min && playerXP < r.max) currentRank = r; }
+      
+      document.getElementById("top-rank").innerText = currentRank.n;
+      const rName = document.getElementById("rank-name");
+      rName.innerText = currentRank.n; rName.style.color = currentRank.c;
+      
+      document.getElementById("rank-pts").innerText = `${playerXP} / ${currentRank.max} XP`;
+      let pct = ((playerXP - currentRank.min) / (currentRank.max - currentRank.min)) * 100;
+      document.getElementById("rank-bar").style.width = Math.min(100, pct) + "%";
+      document.getElementById("rank-bar").style.background = currentRank.c;
+      
+      renderTierList(currentRank);
+    }
+    
+    function updateChartBars() {
+      // Animate Graphical Bars in Report Tab based on User local data
+      let tRate = Math.min(100, (completedTasksCount / 50) * 100) || 5; 
+      document.getElementById("bar-tasks").style.height = tRate + "%";
+      document.getElementById("bar-tasks-val").innerText = completedTasksCount;
+
+      let wRate = Math.min(100, (workoutCount / 10) * 100) || 5;
+      document.getElementById("bar-workouts").style.height = wRate + "%";
+      document.getElementById("bar-workouts-val").innerText = workoutCount;
+
+      let aRate = Math.min(100, (totalClasses / 10) * 100) || 5;
+      document.getElementById("bar-attend").style.height = aRate + "%";
+      document.getElementById("bar-attend-val").innerText = totalClasses;
+
+      let mRate = Math.min(100, (monthlyCompletedCount / 5) * 100) || 5;
+      document.getElementById("bar-monthly").style.height = mRate + "%";
+      document.getElementById("bar-monthly-val").innerText = monthlyCompletedCount;
+    }
+
+    function renderTierList(currentRank) {
+      const tl = document.getElementById("tier-list-container");
+      tl.innerHTML = ranks.map(r => {
+        const isReached = playerXP >= r.max; const isCurrent = (r.n === currentRank.n);
+        let status = isReached ? '✔ UNLOCKED' : (isCurrent ? '▶ CURRENT' : '🔒 LOCKED');
+        let color = isCurrent ? 'var(--cyan)' : (isReached ? 'var(--green)' : 'var(--muted)');
+        return `<div class="tier-list-item" style="color: ${color};"><span style="font-weight: 800;">${r.n}</span><span style="font-size: 11px; font-weight: bold;">${r.min} XP - ${status}</span></div>`;
+      }).join('');
+    }
+
+    function saveStats() {
+      localStorage.setItem("xp", playerXP); localStorage.setItem("tasksDone", completedTasksCount);
+      localStorage.setItem("workoutsDone", workoutCount); localStorage.setItem("classesDone", totalClasses);
+    }
+  </script>
+</body>
+</html>
